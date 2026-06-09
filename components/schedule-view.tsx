@@ -1,14 +1,16 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Printer, RotateCcw } from "lucide-react"
+import { Printer, RotateCcw, CalendarArrowDown, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ScheduleBlock, BlockCategory } from "@/types"
+import { downloadICS, getTomorrowDate } from "@/lib/calendar-export"
 
 interface CategoryStyle { bg: string; border: string; badge: string; label: string; dot: string }
 
 const STYLES: Record<BlockCategory, CategoryStyle> = {
-  routine: { bg: 'bg-slate-50',  border: 'border-slate-200',  badge: 'bg-slate-200 text-slate-700',   label: 'Routine',      dot: 'bg-slate-400' },
+  routine: { bg: 'bg-slate-50',  border: 'border-slate-200',  badge: 'bg-slate-200 text-slate-700',   label: 'Routine',       dot: 'bg-slate-400' },
   work:    { bg: 'bg-blue-50',   border: 'border-blue-200',   badge: 'bg-blue-100 text-blue-800',     label: '🎯 Focus Work', dot: 'bg-blue-500'  },
   break:   { bg: 'bg-green-50',  border: 'border-green-200',  badge: 'bg-green-100 text-green-800',   label: '💚 Break',      dot: 'bg-green-500' },
   fun:     { bg: 'bg-amber-50',  border: 'border-amber-200',  badge: 'bg-amber-100 text-amber-800',   label: '⭐ Reward',     dot: 'bg-amber-400' },
@@ -22,10 +24,18 @@ const LEGEND: BlockCategory[] = ['routine','work','break','fun','social','meal',
 interface Props { schedule: ScheduleBlock[]; wakeTime: string; bedTime: string; onReset: () => void }
 
 export function ScheduleView({ schedule, wakeTime, bedTime, onReset }: Props) {
+  const [exported, setExported] = useState(false)
+
   const workBlocks   = schedule.filter(b => b.category === 'work').length
   const rewardBlocks = schedule.filter(b => b.category === 'fun').length
   const breakBlocks  = schedule.filter(b => b.category === 'break').length
   const eventBlocks  = schedule.filter(b => b.category === 'event').length
+
+  function handleExport() {
+    downloadICS(schedule, getTomorrowDate())
+    setExported(true)
+    setTimeout(() => setExported(false), 4000)
+  }
 
   return (
     <div className="space-y-4">
@@ -62,14 +72,43 @@ export function ScheduleView({ schedule, wakeTime, bedTime, onReset }: Props) {
           ))}
         </div>
 
-        <div className="flex gap-3 justify-center mt-6 print:hidden">
-          <Button onClick={() => window.print()} className="bg-white text-indigo-700 hover:bg-indigo-50 gap-2 rounded-2xl font-bold shadow-md">
-            <Printer className="h-4 w-4" /> Print / Save PDF
+        <div className="flex gap-3 justify-center mt-6 print:hidden flex-wrap">
+          {/* ── Google Calendar Export ── */}
+          <Button
+            onClick={handleExport}
+            className={cn(
+              "gap-2 rounded-2xl font-bold shadow-md transition-all",
+              exported
+                ? "bg-green-400 text-white hover:bg-green-400"
+                : "bg-white text-indigo-700 hover:bg-indigo-50"
+            )}
+          >
+            {exported
+              ? <><Check className="h-4 w-4" /> Downloaded!</>
+              : <><CalendarArrowDown className="h-4 w-4" /> Add to Google Calendar</>
+            }
+          </Button>
+
+          <Button onClick={() => window.print()} className="bg-white bg-opacity-20 text-white border-2 border-white border-opacity-40 hover:bg-white hover:bg-opacity-30 gap-2 rounded-2xl font-bold">
+            <Printer className="h-4 w-4" /> Print / PDF
           </Button>
           <Button onClick={onReset} variant="outline" className="border-2 border-white text-white hover:bg-white hover:bg-opacity-10 gap-2 rounded-2xl font-bold">
             <RotateCcw className="h-4 w-4" /> New Day
           </Button>
         </div>
+
+        {/* Calendar import instructions */}
+        {exported && (
+          <div className="mt-4 bg-white bg-opacity-20 rounded-2xl p-4 text-sm text-white text-left max-w-sm mx-auto">
+            <p className="font-bold mb-2">📲 To add to Google Calendar:</p>
+            <ol className="space-y-1 opacity-90 list-decimal list-inside">
+              <li>Open the downloaded <strong>.ics</strong> file</li>
+              <li>Google Calendar opens automatically</li>
+              <li>Tap <strong>"Add all"</strong> — done! ✅</li>
+            </ol>
+            <p className="mt-2 opacity-75 text-xs">On iPhone? It opens in Apple Calendar automatically.</p>
+          </div>
+        )}
       </div>
 
       {/* Blocks */}
@@ -119,9 +158,17 @@ export function ScheduleView({ schedule, wakeTime, bedTime, onReset }: Props) {
         <p className="opacity-90 leading-relaxed mb-6">
           Follow the first block, then the next. Progress — not perfection — is the goal. You&apos;ve got this! 💪
         </p>
-        <Button onClick={onReset} className="bg-white text-green-700 hover:bg-green-50 font-bold px-6 py-3 text-base rounded-2xl gap-2 shadow-md">
-          <RotateCcw className="h-4 w-4" /> Plan Another Day
-        </Button>
+        <div className="flex gap-3 justify-center flex-wrap">
+          <Button onClick={handleExport} className={cn(
+            "font-bold px-6 py-3 text-base rounded-2xl gap-2 shadow-md transition-all",
+            exported ? "bg-green-200 text-green-800" : "bg-white text-green-700 hover:bg-green-50"
+          )}>
+            {exported ? <><Check className="h-4 w-4" /> Downloaded!</> : <><CalendarArrowDown className="h-4 w-4" /> Add to Google Calendar</>}
+          </Button>
+          <Button onClick={onReset} className="bg-white bg-opacity-20 text-white border-2 border-white border-opacity-40 hover:bg-white hover:bg-opacity-30 font-bold px-6 py-3 text-base rounded-2xl gap-2">
+            <RotateCcw className="h-4 w-4" /> Plan Another Day
+          </Button>
+        </div>
       </div>
     </div>
   )
