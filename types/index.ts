@@ -23,3 +23,9 @@ export interface ScheduleBlock {
   tip?: string;
   durationMin: number;
 }
+export interface ScheduleData {
+  selectedDate: string;
+  wakeTime: string;
+  bedTime: string;
+  ...
+}
