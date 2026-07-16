@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import type { Task, FixedEvent, ScheduleBlock } from "@/types"
 import { generateSchedule } from "@/lib/schedule-generator"
+import { SCHEDULE_TASK_PRESETS, getTodayScheduleDayKey } from "@/lib/quest-data"
 import { WelcomeScreen }  from "@/components/welcome-screen"
 import { TimesStep }      from "@/components/times-step"
 import { EventsStep }     from "@/components/events-step"
@@ -29,6 +30,10 @@ const TIME_OPTIONS = generateTimeOptions()
 
 const MUST_DO_EXAMPLES  = ["Apply for jobs","Update resume","LinkedIn networking","Research companies","Practice interview answers","Reply to emails"]
 const WANT_TO_DO_EXAMPLES = ["Watch YouTube","Use my phone","Play video games","Watch TV / Netflix","Browse social media","Listen to podcasts"]
+
+const DAY_LABELS: Record<string, string> = {
+  monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday", thursday: "Thursday", friday: "Friday",
+}
 
 // Steps 1-4 shown in progress bar
 const STEPS = [
@@ -83,6 +88,19 @@ export default function DayPlannerPage() {
     else setWantToDoTasks(prev => prev.filter(t => t.id !== id))
   }, [])
 
+  // Pulls today's job-search checklist (from the Quest playbook) straight into Must-Do tasks
+  const loadJobSearchPreset = useCallback(() => {
+    const dayKey = getTodayScheduleDayKey()
+    const presetTexts = SCHEDULE_TASK_PRESETS[dayKey]
+    setMustDoTasks(prev => {
+      const existingTexts = new Set(prev.map(t => t.text))
+      const newOnes = presetTexts
+        .filter(text => !existingTexts.has(text))
+        .map(text => ({ id: crypto.randomUUID(), text }))
+      return [...prev, ...newOnes]
+    })
+  }, [])
+
   const handleGenerate = useCallback(() => {
     const blocks = generateSchedule(wakeTime, bedTime, mustDoTasks, wantToDoTasks, fixedEvents)
     setSchedule(blocks)
@@ -101,6 +119,8 @@ export default function DayPlannerPage() {
     exit:    { opacity: 0, y: -16 },
     transition: { duration: 0.2 },
   }
+
+  const todayDayKey = getTodayScheduleDayKey()
 
   return (
     <div className="min-h-screen p-4 md:p-8 pb-16">
@@ -195,6 +215,8 @@ export default function DayPlannerPage() {
                     taskColor="blue" nextLabel="Next: Fun stuff →"
                     emptyMessage="Add at least one task! Your brain does better when it has a clear target. 🎯"
                     exampleTags={MUST_DO_EXAMPLES}
+                    onLoadPreset={loadJobSearchPreset}
+                    presetLabel={`✨ Load ${DAY_LABELS[todayDayKey]}'s Job Search Tasks`}
                   />
                 </motion.div>
               )}

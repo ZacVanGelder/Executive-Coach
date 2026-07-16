@@ -135,3 +135,48 @@ export const BADGES: BadgeDef[] = [
   { id: "streak-5", emoji: "🔥", name: "5-Day Streak", description: "Complete Before Starting 5 days running",
     check: (_c, streak) => streak >= 5 },
 ];
+
+// ---- Condensed presets for pre-filling the Daily Schedule wizard ----
+import type { DayKey } from "@/types/quest";
+
+export const SCHEDULE_TASK_PRESETS: Record<Exclude<DayKey, "before">, string[]> = {
+  monday: [
+    "Check email & LinkedIn messages",
+    "Research 5 target companies",
+    "Apply to 2 jobs",
+    "Send 5 LinkedIn connection requests",
+    "Update job search tracker",
+  ],
+  tuesday: [
+    "Search Indeed for part-time jobs",
+    "Apply to 5 part-time jobs",
+    "Visit stores for walk-in applications",
+    "Update job search tracker",
+  ],
+  wednesday: [
+    "Study a certification course (90 min)",
+    "Contact 2 volunteer organizations",
+    "Update GitHub, resume, and LinkedIn",
+  ],
+  thursday: [
+    "Check email & LinkedIn messages",
+    "Research 5 new target companies",
+    "Apply to 2 jobs",
+    "Send 5 LinkedIn connection requests",
+    "Update job search tracker",
+  ],
+  friday: [
+    "Apply to 5 more part-time jobs",
+    "Visit new stores for walk-in applications",
+    "Update job search tracker",
+  ],
+};
+
+export function getTodayScheduleDayKey(): Exclude<DayKey, "before"> {
+  const day = new Date().getDay(); // 0=Sun..6=Sat
+  const map: Record<number, Exclude<DayKey, "before">> = {
+    1: "monday", 2: "tuesday", 3: "wednesday", 4: "thursday", 5: "friday",
+    0: "friday", 6: "monday", // weekend fallback
+  };
+  return map[day];
+}

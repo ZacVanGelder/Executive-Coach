@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, X, ArrowRight, ArrowLeft } from "lucide-react"
+import { Plus, X, ArrowRight, ArrowLeft, Sparkles } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import type { Task } from "@/types"
@@ -23,11 +23,14 @@ interface Props {
   emptyMessage?: string
   isLastStep?: boolean
   exampleTags?: string[]
+  onLoadPreset?: () => void
+  presetLabel?: string
 }
 
 export function TaskStep({
   title, subtitle, placeholder, tasks, inputValue, onInputChange, onAdd, onRemove,
-  onNext, onBack, taskColor, nextLabel = "Next", emptyMessage, isLastStep, exampleTags
+  onNext, onBack, taskColor, nextLabel = "Next", emptyMessage, isLastStep, exampleTags,
+  onLoadPreset, presetLabel,
 }: Props) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") { e.preventDefault(); onAdd() }
@@ -52,6 +55,15 @@ export function TaskStep({
     <div className="bg-white rounded-3xl shadow-xl border border-indigo-100 p-8">
       <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
       <p className="text-gray-600 text-base leading-relaxed mb-5">{subtitle}</p>
+
+      {onLoadPreset && (
+        <button
+          onClick={onLoadPreset}
+          className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all"
+        >
+          <Sparkles className="h-4 w-4" /> {presetLabel || "Load Today's Job Search Tasks"}
+        </button>
+      )}
 
       {exampleTags && exampleTags.length > 0 && (
         <div className="mb-4">
